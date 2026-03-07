@@ -1,0 +1,124 @@
+---
+---
+
+<div class="pointer-events-none fixed inset-0 overflow-hidden">
+  <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,#0f1a38_0%,#050814_48%,#02040a_100%)]"></div>
+  <div class="absolute inset-0 bg-soft-radial opacity-90"></div>
+  <div class="absolute left-1/2 top-1/3 h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/10 blur-3xl"></div>
+  <div class="absolute bottom-[-4rem] left-[-2rem] h-56 w-56 rounded-full bg-fuchsia-400/10 blur-3xl"></div>
+  <div class="absolute bottom-[-6rem] right-[8%] h-72 w-72 rounded-full bg-sky-300/10 blur-3xl"></div>
+  <canvas id="starfield" class="absolute inset-0 h-full w-full opacity-90"></canvas>
+  <div class="absolute inset-0 bg-[linear-gradient(135deg,rgba(2,6,23,0.05),rgba(125,211,252,0.08),rgba(244,114,182,0.05))]"></div>
+</div>
+
+<script>
+  type Star = {
+    x: number;
+    y: number;
+    size: number;
+    alpha: number;
+    speed: number;
+    depth: number;
+  };
+
+  const canvas = document.getElementById("starfield");
+
+  if (canvas instanceof HTMLCanvasElement) {
+    const context = canvas.getContext("2d");
+
+    if (context) {
+      const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const stars: Star[] = [];
+      const baseCount = 220;
+      let width = 0;
+      let height = 0;
+      let pointerX = 0;
+      let pointerY = 0;
+      let scrollOffset = 0;
+      let rafId = 0;
+
+      const respawnStar = (star: Star) => {
+        if (Math.random() < 0.5) {
+          star.x = -12;
+          star.y = Math.random() * (height + 24) - 12;
+          return;
+        }
+
+        star.x = Math.random() * (width + 24) - 12;
+        star.y = height + 12;
+      };
+
+      const resize = () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        stars.length = 0;
+
+        for (let index = 0; index < baseCount; index += 1) {
+          const depth = Math.random() * 0.9 + 0.1;
+          const star: Star = {
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: Math.random() * 1.8 + 0.45,
+            alpha: Math.random() * 0.55 + 0.25,
+            speed: 0.08 + depth * 0.45,
+            depth
+          };
+          stars.push(star);
+        }
+      };
+
+      const draw = () => {
+        context.clearRect(0, 0, width, height);
+
+        for (const star of stars) {
+          star.x += star.speed;
+          star.y -= star.speed;
+
+          if (star.x > width + 12 || star.y < -12) {
+            respawnStar(star);
+          }
+
+          const parallaxX = pointerX * star.depth * 18;
+          const parallaxY = pointerY * star.depth * 18 - scrollOffset * star.depth * 0.035;
+          context.fillStyle = `rgba(226, 232, 240, ${star.alpha})`;
+          context.fillRect(star.x + parallaxX, star.y + parallaxY, star.size, star.size);
+        }
+
+        if (!media.matches) {
+          rafId = window.requestAnimationFrame(draw);
+        }
+      };
+
+      const onPointerMove = (event: PointerEvent) => {
+        pointerX = event.clientX / width - 0.5;
+        pointerY = event.clientY / height - 0.5;
+      };
+
+      const onScroll = () => {
+        scrollOffset = window.scrollY;
+      };
+
+      const start = () => {
+        window.cancelAnimationFrame(rafId);
+        draw();
+      };
+
+      resize();
+      start();
+      if (media.matches) {
+        draw();
+      }
+
+      window.addEventListener("resize", resize);
+      window.addEventListener("pointermove", onPointerMove, { passive: true });
+      window.addEventListener("scroll", onScroll, { passive: true });
+      media.addEventListener("change", start);
+    }
+  }
+</script>

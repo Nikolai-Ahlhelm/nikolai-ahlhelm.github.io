@@ -1,0 +1,40 @@
+---
+import type { SiteLink } from "../data/site";
+
+type Props = {
+  links: Array<SiteLink & { text: string }>;
+  label: string;
+};
+
+const { links, label } = Astro.props;
+---
+
+<header class="pointer-events-none fixed inset-x-0 top-0 z-30 px-4 pt-4 sm:px-6 lg:px-10">
+  <nav
+    aria-label={label}
+    data-i18n-aria-label="navLabel"
+    class="glass-panel pointer-events-auto mx-auto flex max-w-6xl items-center justify-between rounded-full px-4 py-3 sm:px-6"
+  >
+    <a href="#top" class="text-sm font-semibold uppercase tracking-[0.35em] text-slate-200/90">
+      NA
+    </a>
+    <ul class="flex items-center gap-2 text-sm text-slate-200/90 sm:gap-3">
+      {
+        links.map((link, index) => (
+          <li>
+            <a
+              href={link.href}
+              data-i18n-link-group="nav"
+              data-i18n-link-index={String(index)}
+              class="rounded-full border border-transparent px-3 py-2 transition hover:border-white/10 hover:bg-white/10 hover:text-white"
+              target={link.external ? "_blank" : undefined}
+              rel={link.external ? "noreferrer" : undefined}
+            >
+              {link.text}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</header>
